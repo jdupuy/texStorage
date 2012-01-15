@@ -1,6 +1,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 // \author   Jonathan Dupuy
-//
+// \brief    Code demonstrating AMD Cat11.12 driver issues with
+//           OpenGL's TexStorage functions.
+//           Debug Output produces an access violation error on
+//           windows (with vs2010) so I had to replace it with 
+//           old glGetError.
+// 
 ////////////////////////////////////////////////////////////////////////////////
 // GL libraries
 #include "glew.hpp"
@@ -17,6 +22,10 @@
 // Global variables
 //
 ////////////////////////////////////////////////////////////////////////////////
+
+// iteration variable
+GLint i=0;
+
 
 // From tables 3.12 and 3.14(section 3.9.3) of OpenGL4.2 specs
 const GLenum internalFormats[] = {
@@ -106,7 +115,7 @@ const GLenum internalFormats[] = {
 	GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM*/
 };
 
-	const GLchar* internalFormatsStr[] = {
+const GLchar* internalFormatsStr[] = {
 	// RED
 	"GL_R8",
 	"GL_R8_SNORM",
@@ -199,17 +208,18 @@ const GLenum internalFormats[] = {
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifndef _WIN32
 ////////////////////////////////////////////////////////////////////////////////
 // Convert GL error code to string
-static GLvoid gl_debug_message_callback(GLenum source,
-                                        GLenum type,
-                                        GLuint id,
-                                        GLenum severity,
-                                        GLsizei length,
-                                        const GLchar* message,
-                                        GLvoid* userParam)
+GLvoid gl_debug_message_callback(GLenum source,
+                                 GLenum type,
+                                 GLuint id,
+                                 GLenum severity,
+                                 GLsizei length,
+                                 const GLchar* message,
+                                 GLvoid* userParam)
 {
-	GLuint index = *reinterpret_cast<GLuint*>(userParam);
+	GLint index = *(reinterpret_cast<GLint*>(userParam));
 	std::cerr << "[DEBUG_OUTPUT] "
 	          << message
 	          << " (internalformat= "
@@ -217,22 +227,46 @@ static GLvoid gl_debug_message_callback(GLenum source,
 	          << ')'
 	          << std::endl;
 }
+#else
+const GLchar* gl_error_to_string(GLenum error)
+{
+	switch(error)
+	{
+	case GL_NO_ERROR:
+		return "GL_NO_ERROR";
+	case GL_INVALID_ENUM:
+		return "GL_INVALID_ENUM";
+	case GL_INVALID_VALUE:
+		return "GL_INVALID_VALUE";
+	case GL_INVALID_OPERATION:
+		return "GL_INVALID_OPERATION";
+	case GL_INVALID_FRAMEBUFFER_OPERATION:
+		return "GL_INVALID_FRAMEBUFFER_OPERATION";
+	case GL_OUT_OF_MEMORY:
+		return "GL_OUT_OF_MEMORY";
+	default:
+		return "unknown code";
+	}
+}
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // on init cb
 void on_init()
 {
 	// variables
-	GLuint i=0;
 	GLuint texture=0;
-	GLuint iterationCnt=sizeof(internalFormats)/(sizeof(GLenum));
+	GLint iterationCnt=sizeof(internalFormats)/(sizeof(GLenum));
 
+#ifndef _WIN32
 	// Configure debug output
+	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
 	glDebugMessageCallbackARB(
 			reinterpret_cast<GLDEBUGPROCARB>(&gl_debug_message_callback),
-			&i );
+			reinterpret_cast<GLvoid*>(&i) );
+#endif
 
-	// 1D tests
 	for(i=0; i<iterationCnt; ++i)
 	{
 		glGenTextures(1, &texture);
@@ -241,7 +275,17 @@ void on_init()
 			               1,
 			               internalFormats[i],
 			               1);
+		glBindTexture(GL_TEXTURE_1D, 0);
 		glDeleteTextures(1, &texture);
+#ifdef _WIN32
+		GLenum error = glGetError();
+		if(error!=GL_NO_ERROR)
+			std::cerr << "glTexStorage1D gave "
+			          << gl_error_to_string(error)
+			          << " (internalformat= "
+			          << internalFormatsStr[i]
+		              << ")\n";
+#endif
 	}
 	std::cerr << '\n';
 
@@ -256,12 +300,22 @@ void on_init()
 			               1,
 			               1);
 		glDeleteTextures(1, &texture);
+#ifdef _WIN32
+		GLenum error = glGetError();
+		if(error!=GL_NO_ERROR)
+			std::cerr << "glTexStorage2D gave "
+			          << gl_error_to_string(error)
+			          << " (internalformat= "
+			          << internalFormatsStr[i]
+		              << ")\n";
+#endif
 	}
 	std::cerr << '\n';
 
 	// 3D tests
 	for(i=0; i<iterationCnt; ++i)
 	{
+
 		glGenTextures(1, &texture);
 		glBindTexture(GL_TEXTURE_3D, texture);
 			glTexStorage3D(GL_TEXTURE_3D,
@@ -271,6 +325,15 @@ void on_init()
 			               1,
 			               1);
 		glDeleteTextures(1, &texture);
+#ifdef _WIN32
+		GLenum error = glGetError();
+		if(error!=GL_NO_ERROR)
+			std::cerr << "glTexStorage3D gave "
+			          << gl_error_to_string(error)
+			          << " (internalformat= "
+			          << internalFormatsStr[i]
+		              << ")\n";
+#endif
 	}
 }
 
@@ -303,7 +366,8 @@ void on_resize(GLint w, GLint h)
 // on key down cb
 void on_key_down(GLubyte key, GLint x, GLint y)
 {
-
+	if(key==27)
+		glutLeaveMainLoop();
 }
 
 
@@ -358,6 +422,7 @@ int main(int argc, char** argv)
 	glutCreateWindow("OpenGL");
 
 	// init glew
+	glewExperimental = GL_TRUE;
 	GLenum err = glewInit();
 	if(GLEW_OK != err)
 	{
@@ -382,6 +447,7 @@ int main(int argc, char** argv)
 
 	// run
 	on_init();
+//	glutMainLoop();
 
 	return 0;
 }

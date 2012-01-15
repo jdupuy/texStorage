@@ -19,7 +19,7 @@
 		</ProjectConfiguration>
 	</ItemGroup>
 	<PropertyGroup Label="Globals">
-		<ProjectGuid>{C8EB9FC6-B820-A595-74A4-6BD69B3709E5}</ProjectGuid>
+		<ProjectGuid>{8632057F-EE1D-45E4-BD5E-E70B0D2491B2}</ProjectGuid>
 		<RootNamespace>demo</RootNamespace>
 		<Keyword>Win32Proj</Keyword>
 	</PropertyGroup>
@@ -128,7 +128,7 @@
 			<AdditionalIncludeDirectories>include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
 		</ResourceCompile>
 		<Link>
-			<AdditionalDependencies>glew32s.lib;freeglut.lib;AntTweakBar.lib;%(AdditionalDependencies)</AdditionalDependencies>
+			<AdditionalDependencies>glew32s.lib;freeglut.lib;%(AdditionalDependencies)</AdditionalDependencies>
 			<OutputFile>$(OutDir)demo.exe</OutputFile>
 			<AdditionalLibraryDirectories>lib\windows\win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
 			<SubSystem>Console</SubSystem>
@@ -184,7 +184,7 @@
 			<AdditionalIncludeDirectories>include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
 		</ResourceCompile>
 		<Link>
-			<AdditionalDependencies>glew32s.lib;freeglut.lib;AntTweakBar.lib;%(AdditionalDependencies)</AdditionalDependencies>
+			<AdditionalDependencies>glew32s.lib;freeglut.lib;%(AdditionalDependencies)</AdditionalDependencies>
 			<OutputFile>$(OutDir)demo.exe</OutputFile>
 			<AdditionalLibraryDirectories>lib\windows\win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
 			<SubSystem>Console</SubSystem>

@@ -53,8 +53,7 @@ solution "OpenGL"
 			}
 			links {
 			"glew32s",
-			"freeglut",
-			"AntTweakBar"
+			"freeglut"
 			}
 
 ---- Visual x64
